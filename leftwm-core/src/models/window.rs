@@ -8,6 +8,7 @@ use crate::models::Xyhw;
 use crate::models::XyhwBuilder;
 use serde::{Deserialize, Serialize};
 use x11_dl::xlib;
+use x11rb::protocol::xproto;
 
 type MockHandle = i32;
 
@@ -15,6 +16,7 @@ type MockHandle = i32;
 pub enum WindowHandle {
     MockHandle(MockHandle),
     XlibHandle(xlib::Window),
+    XCBHandle(x11rb::protocol::xproto::Window)
 }
 
 impl std::convert::From<xlib::Window> for WindowHandle {
@@ -23,11 +25,24 @@ impl std::convert::From<xlib::Window> for WindowHandle {
     }
 }
 
+impl std::convert::From<xproto::Window> for WindowHandle {
+    fn from(window: xproto::Window) -> Self {
+        WindowHandle::XCBHandle(window)
+    }
+}
+
 impl WindowHandle {
     pub fn xlib_handle(self) -> Option<xlib::Window> {
         match self {
-            WindowHandle::MockHandle(_) => None,
             WindowHandle::XlibHandle(h) => Some(h),
+            _ => None,
+        }
+    }
+
+    pub fn xcb_handle(self) -> Option<xproto::Window> {
+        match self {
+            WindowHandle::XCBHandle(h) => Some(h),
+            _ => None,
         }
     }
 }

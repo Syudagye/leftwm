@@ -253,7 +253,7 @@ impl Tag {
                 .iter_mut()
                 .filter(|w| {
                     w.has_tag(&self.id)
-                        && w.transient.unwrap_or_else(|| 0.into()) == handle
+                        && w.transient.unwrap_or_else(|| 0u32.into()) == handle
                         && !w.is_unmanaged()
                 })
                 .for_each(|w| {

@@ -7,12 +7,14 @@ use crate::DisplayEvent;
 #[cfg(test)]
 mod mock_display_server;
 pub mod xlib_display_server;
+pub mod xcb_display_server;
 use futures::prelude::*;
 use std::pin::Pin;
 
 #[cfg(test)]
 pub use self::mock_display_server::MockDisplayServer;
 pub use self::xlib_display_server::XlibDisplayServer;
+pub use self::xcb_display_server::XCBDisplayServer;
 
 pub trait DisplayServer {
     fn new(config: &impl Config) -> Self;
@@ -24,16 +26,13 @@ pub trait DisplayServer {
         _config: &impl Config,
         _focused: Option<&Option<WindowHandle>>,
         _windows: &[Window],
-    ) {
-    }
+    );
 
-    fn update_windows(&self, _windows: Vec<&Window>) {}
+    fn update_windows(&self, _windows: Vec<&Window>);
 
-    fn update_workspaces(&self, _focused: Option<&Workspace>) {}
+    fn update_workspaces(&self, _focused: Option<&Workspace>);
 
-    fn execute_action(&mut self, _act: DisplayAction) -> Option<DisplayEvent> {
-        None
-    }
+    fn execute_action(&mut self, _act: DisplayAction) -> Option<DisplayEvent>;
 
     fn wait_readable(&self) -> Pin<Box<dyn Future<Output = ()>>>;
 

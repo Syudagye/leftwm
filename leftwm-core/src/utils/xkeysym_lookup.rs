@@ -2,6 +2,11 @@
 use std::os::raw::c_uint;
 use x11_dl::keysym::*;
 use x11_dl::xlib;
+use x11rb::protocol::xproto::Keysym;
+use x11rb::protocol::xproto::ModMask as XCBModMask;
+use xkbcommon::xkb::KEYSYM_NO_FLAGS;
+use xkbcommon::xkb::keysym_from_name;
+use xkbcommon::xkb::keysyms;
 
 pub type XKeysym = c_uint;
 pub type ModMask = c_uint;
@@ -24,6 +29,22 @@ pub fn into_modmask(keys: &[String]) -> ModMask {
 }
 
 #[must_use]
+pub fn into_modmask_xcb(keys: &[String]) -> XCBModMask {
+    let mut mask = 0u16;
+    for s in keys {
+        mask |= into_mod_xcb(s);
+    }
+    //clean the mask
+    mask &= !( u16::from(XCBModMask::M2) | u16::from(XCBModMask::LOCK));
+    (mask & (u16::from(XCBModMask::SHIFT)
+            | u16::from(XCBModMask::CONTROL)
+            | u16::from(XCBModMask::M1)
+            | u16::from(XCBModMask::M3)
+            | u16::from(XCBModMask::M4)
+            | u16::from(XCBModMask::M5))).into()
+}
+
+#[must_use]
 pub fn into_mod(key: &str) -> ModMask {
     match key {
         "None" => xlib::AnyModifier,
@@ -37,6 +58,34 @@ pub fn into_mod(key: &str) -> ModMask {
         "Mod5" => xlib::Mod5Mask,
         _ => 0,
     }
+}
+
+/// Translate string keysyms into XCBModMask
+#[must_use]
+pub fn into_mod_xcb(key: &str) -> XCBModMask {
+    match key {
+        "None" => XCBModMask::ANY,
+        "Shift" => XCBModMask::SHIFT,
+        "Control" => XCBModMask::CONTROL,
+        "Mod1" | "Alt" => XCBModMask::M1,
+        // "Mod2" => XCBModMask::M2,     // NOTE: we are ignoring the state of Numlock
+        // "NumLock" => XCBModMask::M2,  // this is left here as a reminder
+        "Mod3" => XCBModMask::M3,
+        "Mod4" | "Super" => XCBModMask::M4,
+        "Mod5" => XCBModMask::M5,
+        _ => XCBModMask::ANY,
+    }
+}
+
+/// Translate a key name into the corresponding keysym
+///
+/// for example: "BackSpace" becomes the value of KEY_BackSpace in xkbcommon
+pub fn into_keysym_xcb(key: &str) -> Option<Keysym> {
+    let k = keysym_from_name(&format!("KEY_{}", key), KEYSYM_NO_FLAGS);
+    if k == keysyms::KEY_NoSymbol {
+        return None;
+    }
+    Some(k)
 }
 
 // We allow this because this function is simply a mapping wrapper.

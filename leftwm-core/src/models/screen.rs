@@ -1,6 +1,7 @@
-use super::{DockArea, Size, WindowHandle};
+use super::{DockArea, Size, WindowHandle, XyhwChange};
 use crate::config::Workspace;
 use serde::{Deserialize, Serialize};
+use x11rb::protocol::{xinerama::ScreenInfo, xproto};
 use std::convert::From;
 use x11_dl::xlib;
 
@@ -92,8 +93,40 @@ impl From<&xlib::XWindowAttributes> for Screen {
     }
 }
 
+impl From<&(XyhwChange, xproto::Window)> for Screen {
+    fn from((geo, root): &(XyhwChange, xproto::Window)) -> Self {
+        Self {
+            root: (*root).into(),
+            bbox: BBox {
+                height: geo.h.unwrap_or_default(),
+                width: geo.w.unwrap_or_default(),
+                x: geo.x.unwrap_or_default(),
+                y: geo.y.unwrap_or_default(),
+            },
+            wsid: None,
+            max_window_width: None,
+        }
+    }
+}
+
 impl From<&x11_dl::xinerama::XineramaScreenInfo> for Screen {
     fn from(root: &x11_dl::xinerama::XineramaScreenInfo) -> Self {
+        Self {
+            root: WindowHandle::MockHandle(0),
+            bbox: BBox {
+                height: root.height.into(),
+                width: root.width.into(),
+                x: root.x_org.into(),
+                y: root.y_org.into(),
+            },
+            wsid: None,
+            max_window_width: None,
+        }
+    }
+}
+
+impl From<&ScreenInfo> for Screen {
+    fn from(root: &ScreenInfo) -> Self {
         Self {
             root: WindowHandle::MockHandle(0),
             bbox: BBox {

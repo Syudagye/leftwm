@@ -76,7 +76,7 @@ impl State {
         // Fullscreen windows children.
         let (level1, fullscreen_children, other): (Vec<WindowHandle>, Vec<Window>, Vec<Window>) =
             partition_windows(other.iter(), |w| {
-                level2.contains(&w.transient.unwrap_or_else(|| 0.into()))
+                level2.contains(&w.transient.unwrap_or_else(|| 0u32.into()))
             });
 
         // Left over managed windows.

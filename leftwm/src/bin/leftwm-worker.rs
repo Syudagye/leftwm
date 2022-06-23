@@ -1,9 +1,9 @@
-use leftwm_core::{Manager, XlibDisplayServer};
+use leftwm_core::{Manager, XlibDisplayServer, display_servers::xcb_display_server::XCBDisplayServer};
 use slog::{o, Drain};
 use std::panic;
 
 fn main() {
-    //let _log_guard = setup_logfile();
+    // let _log_guard = setup_logfile();
     let _log_guard = setup_logging();
     log::info!("leftwm-worker booted!");
 
@@ -13,7 +13,8 @@ fn main() {
 
         let config = leftwm::load();
 
-        let manager = Manager::<leftwm::Config, XlibDisplayServer>::new(config);
+        //let manager = Manager::<leftwm::Config, XlibDisplayServer>::new(config);
+        let manager = Manager::<leftwm::Config, XCBDisplayServer>::new(config);
         manager.register_child_hook();
 
         rt.block_on(manager.event_loop());
